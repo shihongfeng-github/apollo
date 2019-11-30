@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2017 The Apollo Authors. All Rights Reserved.
+ * Copyright 2019 The Apollo Authors. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,38 +14,27 @@
  * limitations under the License.
  *****************************************************************************/
 
-/**
- * @file
- * @brief Some string util functions.
- */
-
 #pragma once
 
-#include <string>
+#include "absl/memory/memory.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
+#include "absl/utility/utility.h"
 
-#include "google/protobuf/stubs/stringprintf.h"
-#include "modules/common/util/future.h"
+namespace std {
+// Drop-in replacement for code compliant with future C++ versions.
+// Remove the borrowed items upon upgrading.
 
-/**
- * @namespace apollo::common::util
- * @brief apollo::common::util
- */
-namespace apollo {
-namespace common {
-namespace util {
+#if __cplusplus == 201103L
 
-// TODO(xiaoxq): Migrate to absl::StrFormat after absl upgraded.
-using google::protobuf::StringPrintf;
+// Borrow from C++ 17.
+using absl::optional;
+using absl::string_view;
 
-struct DebugStringFormatter {
-  template <class T>
-  void operator()(std::string* out, const T& t) const {
-    out->append(t.DebugString());
-  }
-};
+// Borrow from C++ 14.
+using absl::make_integer_sequence;
+using absl::make_unique;
 
-std::string EncodeBase64(std::string_view in);
+#endif
 
-}  // namespace util
-}  // namespace common
-}  // namespace apollo
+}  // namespace std

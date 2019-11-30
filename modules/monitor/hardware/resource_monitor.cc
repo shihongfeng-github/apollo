@@ -28,7 +28,6 @@
 
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
 #include "modules/common/util/map_util.h"
 #include "modules/monitor/common/monitor_manager.h"
 #include "modules/monitor/software/summary_monitor.h"
@@ -107,8 +106,8 @@ float GetCPUUsage(const int pid, const std::string& process_name,
   if (prev_jiffies == 0) {
     return 0.0;
   }
-  return static_cast<float>(100.0 * ((jiffies - prev_jiffies) / hertz /
-                                     FLAGS_resource_monitor_interval));
+  return 100.0f * (static_cast<float>(jiffies - prev_jiffies) / hertz /
+                  FLAGS_resource_monitor_interval);
 }
 
 }  // namespace

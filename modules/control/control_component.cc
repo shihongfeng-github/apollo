@@ -19,6 +19,7 @@
 #include "cyber/common/file.h"
 #include "cyber/common/log.h"
 #include "modules/common/adapters/adapter_gflags.h"
+#include "modules/common/latency_recorder/latency_recorder.h"
 #include "modules/common/time/time.h"
 #include "modules/common/vehicle_state/vehicle_state_provider.h"
 #include "modules/control/common/control_gflags.h"
@@ -318,11 +319,17 @@ bool ControlComponent::Proc() {
     if (pad_msg != nullptr) {
       local_view_.mutable_pad_msg()->CopyFrom(pad_msg_);
     }
-    common::util::FillHeader(FLAGS_control_local_view_topic, &local_view_);
   }
 
   // use control submodules
   if (FLAGS_use_control_submodules) {
+    local_view_.mutable_header()->set_lidar_timestamp(
+        local_view_.trajectory().header().lidar_timestamp());
+    local_view_.mutable_header()->set_camera_timestamp(
+        local_view_.trajectory().header().camera_timestamp());
+    local_view_.mutable_header()->set_radar_timestamp(
+        local_view_.trajectory().header().radar_timestamp());
+    common::util::FillHeader(FLAGS_control_local_view_topic, &local_view_);
     local_view_writer_->Write(std::make_shared<LocalView>(local_view_));
     return true;
   }
@@ -351,6 +358,15 @@ bool ControlComponent::Proc() {
                           << status.error_message();
 
   double end_timestamp = Clock::NowInSeconds();
+
+  // measure latency
+  if (local_view_.trajectory().header().has_lidar_timestamp()) {
+    static apollo::common::LatencyRecorder latency_recorder(
+        FLAGS_control_command_topic);
+    latency_recorder.AppendLatencyRecord(
+        local_view_.trajectory().header().lidar_timestamp(), start_timestamp,
+        end_timestamp);
+  }
 
   if (pad_received_) {
     control_command.mutable_pad_msg()->CopyFrom(pad_msg_);
